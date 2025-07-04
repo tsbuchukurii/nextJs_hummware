@@ -1,4 +1,5 @@
 import "./globals.css";
+import {AuthProvider} from "@/context/AuthProvider";
 
 export default function RootLayout({ children }) {
   return (
@@ -6,13 +7,21 @@ export default function RootLayout({ children }) {
       <body>
           <header>
               <nav>
-                  <a href="/">Home</a>
-                  <a href="/dashboard">Dashboard</a>
-                  <a href="/api/auth/signin">Login</a>
+                  <ul>
+                    <li>
+                        <a href="/">Home</a>
+                    </li>
+                    <li>
+                        <a href="/dashboard">Dashboard</a>
+                    </li>
+                    <li>
+                        <a href="/api/auth/signin">Login</a>
+                    </li>
+                  </ul>
               </nav>
           </header>
-        {children}
-          <footer>My Next.js App</footer>
+          <AuthProvider>{children}</AuthProvider>
+          <footer>hummware</footer>
       </body>
     </html>
   );
