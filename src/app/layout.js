@@ -1,28 +1,16 @@
 import "./globals.css";
-import {AuthProvider} from "@/context/AuthProvider";
+import HeaderComponent from "@/components/HeaderComponent";
 
-export default function RootLayout({ children }) {
+const RootLayout = ({ children }) => {
   return (
     <html lang="en">
       <body>
-          <header>
-              <nav>
-                  <ul>
-                    <li>
-                        <a href="/">Home</a>
-                    </li>
-                    <li>
-                        <a href="/dashboard">Dashboard</a>
-                    </li>
-                    <li>
-                        <a href="/api/auth/signin">Login</a>
-                    </li>
-                  </ul>
-              </nav>
-          </header>
-          <AuthProvider>{children}</AuthProvider>
+          <HeaderComponent />
+              {children}
           <footer>hummware</footer>
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

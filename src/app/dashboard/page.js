@@ -1,27 +1,27 @@
-"use client";
+'use client';
 
-import { useSession, signIn } from "next-auth/react";
-import { useEffect } from "react";
-import process from "next/dist/build/webpack/loaders/resolve-url-loader/lib/postcss";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function Dashboard() {
-    const {data: session, status} = [];//useSession();
+    const { data: session, status } = useSession();
+    const router = useRouter();
 
     useEffect(() => {
-        console.log(process.env.NEXT_PUBLIC_API_URL);
-        if (status === "unauthenticated") {
-            signIn(); // redirect to login
-        }
-    }, [status]);
+        if (status === 'loading') return; // Do nothing while loading
+        if (!session) router.push('/login');
+    }, [session, status, router]);
 
-    if (status === "loading") {
+    if (status === 'loading') {
         return <div>Loading...</div>;
     }
 
-    if (!session) {
-        return null; // or a spinner
-    }
-
-    return <ProtectedRoute>Welcome to Dashboard</ProtectedRoute>
+    return (
+        <div>
+            <h1>Dashboard</h1>
+            <p>Welcome, {session?.user?.email}</p>
+            {/* Add your dashboard content here */}
+        </div>
+    );
 }

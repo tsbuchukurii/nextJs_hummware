@@ -1,71 +1,55 @@
-// app/api/auth/[...nextauth]/route.js
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import axios from "axios";
 
-export const authOptions = {
+const handler = NextAuth({
     providers: [
         CredentialsProvider({
             name: "Credentials",
             credentials: {
-                email: { label: "Email", type: "email" },
-                password: { label: "Password", type: "password" },
+                email: { label: "Email", type: "text" },
+                password: { label: "Password", type: "password" }
             },
-            authorize: async (credentials, req) => {
-                // Verify credentials against your database
-                const user = await verifyUser(credentials.email, credentials.password);
-                if (user) {
-                    // Return user object with custom claims or roles
-                    return { id: user.id, name: user.name, email: user.email, role: user.role };
+            async authorize(credentials) {
+                if (!credentials?.email || !credentials?.password) {
+                    return null;
                 }
-                return null;
-            },
-        }),
+
+                try {
+                    const res = await axios.post(`${process.env.API_BASE_URL}/login`, {
+                        email: credentials.email,
+                        password: credentials.password,
+                    });
+
+                    if (res.data.user) {
+                        return res.data.user;
+                    } else {
+                        return null;
+                    }
+                } catch (error) {
+                    console.error("Authentication error:", error);
+                    return null;
+                }
+            }
+        })
     ],
-    session: {
-        strategy: "jwt",
-        maxAge: 60 * 60 * 24, // 1 day
-        updateAge: 60 * 30, // 30 mins
-    },
-    jwt: {
-        secret: process.env.JWT_SECRET,
-        encryption: true,
-    },
     callbacks: {
-        jwt: async ({ token, user, account, profile }) => {
+        async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
-                token.email = user.email;
-                token.name = user.name;
-                token.role = user.role; // role-based access
-                token.refreshToken = generateRefreshToken(); // implement this
             }
             return token;
         },
-        session: async ({ session, token }) => {
-            session.user.id = token.id;
-            session.user.email = token.email;
-            session.user.name = token.name;
-            session.user.role = token.role;
-            session.accessToken = token.accessToken; // Optional
+        async session({ session, token }) {
+            if (session.user) {
+                session.user.id = token.id;
+            }
             return session;
-        },
+        }
     },
     pages: {
-        signIn: '/login', // customize login page
+        signIn: '/login',
     },
-};
+});
 
-async function verifyUser(email, password) {
-    // Replace with your user database validation
-    if (email === 'user@example.com' && password === 'securePassword123') {
-        return { id: '1', name: 'Advanced User', email: email, role: 'admin' };
-    }
-    return null;
-}
-
-// Dummy refresh token generator
-function generateRefreshToken() {
-    return Math.random().toString(36).substring(2);
-}
-
-export { authOptions as default };
+export { handler as GET, handler as POST };
