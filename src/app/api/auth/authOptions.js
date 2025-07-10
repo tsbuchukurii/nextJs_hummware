@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { verifyUser } from "@/lib/auth";
 
 export const authOptions = {
     providers: [
@@ -9,11 +10,9 @@ export const authOptions = {
                 email: { label: "Email", type: "email" },
                 password: { label: "Password", type: "password" },
             },
-            authorize: async (credentials, req) => {
-                // Verify credentials against your database
+            async authorize(credentials, req) {
                 const user = await verifyUser(credentials.email, credentials.password);
                 if (user) {
-                    // Return user object with custom claims or roles
                     return { id: user.id, name: user.name, email: user.email, role: user.role };
                 }
                 return null;
@@ -30,41 +29,33 @@ export const authOptions = {
         encryption: true,
     },
     callbacks: {
-        jwt: async ({ token, user, account, profile }) => {
+        async jwt({ token, user }) {
             if (user) {
                 token.id = user.id;
                 token.email = user.email;
                 token.name = user.name;
-                token.role = user.role; // role-based access
-                token.refreshToken = generateRefreshToken(); // implement this
+                token.role = user.role;
+                token.refreshToken = generateRefreshToken();
             }
             return token;
         },
-        session: async ({ session, token }) => {
+        async session({ session, token }) {
             session.user.id = token.id;
             session.user.email = token.email;
             session.user.name = token.name;
             session.user.role = token.role;
-            session.accessToken = token.accessToken; // Optional
+            session.accessToken = token.accessToken;
             return session;
         },
     },
     pages: {
-        signIn: '/login', // customize login page
+        signIn: "/auth/signin",
     },
 };
-
-async function verifyUser(email, password) {
-    // Replace with your user database validation
-    if (email === 'user@example.com' && password === 'securePassword123') {
-        return { id: '1', name: 'Advanced User', email: email, role: 'admin' };
-    }
-    return null;
-}
 
 // Dummy refresh token generator
 function generateRefreshToken() {
     return Math.random().toString(36).substring(2);
 }
 
-export { authOptions as default };
+export default authOptions;

@@ -3,8 +3,9 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-export default function Dashboard() {
+const Dashboard = () =>{
     const { data: session, status } = useSession();
     const router = useRouter();
 
@@ -25,3 +26,8 @@ export default function Dashboard() {
         </div>
     );
 }
+export default () => (
+    <ProtectedRoute allowedRoles={['admin']}>
+        <Dashboard />
+    </ProtectedRoute>
+);

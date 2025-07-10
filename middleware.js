@@ -1,51 +1,36 @@
-// middleware.js
+// app/middleware.js
 import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
+
+// Define protected routes
+const protectedRoutes = ['/dashboard'];
 
 export async function middleware(request) {
     const { pathname } = request.nextUrl;
 
-    // Allow access to login, API auth, public pages
-    if (
-        pathname.startsWith('/api/auth') ||
-        pathname.startsWith('/login') ||
-        pathname === '/'
-    ) {
-        return NextResponse.next();
+    // Check if route is protected
+    if (protectedRoutes.some((route) => pathname.startsWith(route))) {
+        // Retrieve token/session info. Assumes you're storing authentication info in cookies
+        const token = request.cookies.get('authToken')?.value;
+
+        // If token is invalid or missing, redirect to login
+        if (!token || !(await verifyToken(token))) {
+            const loginUrl = new URL('/login', request.url);
+            return NextResponse.redirect(loginUrl);
+        }
     }
 
-    // Retrieve token (JWT) from cookies
-    const token = await getToken({ request, secret: process.env.JWT_SECRET });
-
-    if (!token) {
-        // Not authenticated - redirect to login
-        return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    // Role-based enforcement example
-    const requiredRole = getRequiredRoleFromPath(pathname); // implement helper
-
-    if (requiredRole && token.role !== requiredRole) {
-        // User lacks permission, redirect or show error
-        return NextResponse.redirect(new URL('/unauthorized', request.url));
-    }
-
-    // All good, continue
     return NextResponse.next();
 }
 
-function getRequiredRoleFromPath(pathname) {
-    // Define role restrictions based on route
-    if (pathname.startsWith('/admin')) return 'admin';
-    if (pathname.startsWith('/dashboard')) return null; // accessible to all logged-in
-    return null;
+// Example token verification logic (simulate your API call or JWT validation)
+async function verifyToken(token) {
+    // For example purposes, assume token validity check is asynchronous
+    // You might opt to verify JWT here or call your backend API
+    try {
+        // Placeholder: verify token validity and return boolean
+        // In production, replace with actual validation logic
+        return true; // e.g., await verifyJWT(token);
+    } catch {
+        return false;
+    }
 }
-
-export const config = {
-    // Protect all routes except specific ones
-    matcher: [
-        '/dashboard/:path*',
-        '/admin/:path*',
-        // include other protected paths
-    ],
-};

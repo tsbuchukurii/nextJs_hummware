@@ -1,22 +1,29 @@
 'use client';
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/context/AuthProvider';
-
-export default function ProtectedRoute({ children }) {
-    const { user } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles = [] }) => {
+    const { data: session, status } = useSession();
     const router = useRouter();
 
     useEffect(() => {
-        if (!user) {
-            router.push('/login'); // or your login path
+        if (status === 'unauthenticated') {
+            router.push('/api/auth/signin');
+        } else if (status === 'authenticated' && allowedRoles.length > 0 && !allowedRoles.includes(session.user.role)) {
+            router.push('/403'); // Redirect to 403 Forbidden page
         }
-    }, [user, router]);
+    }, [status, router, session, allowedRoles]);
 
-    if (!user) {
-        return <p>Loading...</p>; // optional loader
+    if (status === 'loading') {
+        return <div>Loading...</div>;
+    }
+
+    if (status === 'unauthenticated' || (status === 'authenticated' && allowedRoles.length > 0 && !allowedRoles.includes(session.user.role))) {
+        return null;
     }
 
     return children;
-}
+};
+
+export default ProtectedRoute;

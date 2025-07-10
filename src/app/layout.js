@@ -1,13 +1,17 @@
+'use client'
 import "./globals.css";
 import HeaderComponent from "@/components/HeaderComponent";
+import {SessionProvider} from "next-auth/react";
 
 const RootLayout = ({ children }) => {
   return (
     <html lang="en">
       <body>
-          <HeaderComponent />
+          <SessionProvider>
+            <HeaderComponent />
               {children}
-          <footer>hummware</footer>
+            <footer>hummware</footer>
+          </SessionProvider>
       </body>
     </html>
   );
